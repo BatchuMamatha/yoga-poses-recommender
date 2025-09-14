@@ -3,148 +3,621 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Yoga Pose Search</title>
+    <title>🧘‍♀️ YogaFlow - AI Pose Recommender</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        .loading {
-            cursor: wait;
+        * {
+            font-family: 'Inter', sans-serif;
         }
-        .loading * {
-            pointer-events: none; /* Disable clicks on elements while loading */
+        
+        .heading-font {
+            font-family: 'Poppins', sans-serif;
         }
-         .loading #resultsContainer::before {
-            content: "";
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            border: 5px solid #f3f3f3; /* Light grey */
-            border-top: 5px solid #3498db; /* Blue */
+
+        /* Custom Gradient Backgrounds */
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+        
+        .card-gradient {
+            background: linear-gradient(145deg, #f0f4ff 0%, #e8f0fe 100%);
+        }
+        
+        .search-gradient {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #ec4899 100%);
+        }
+
+        /* Animations */
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(79, 70, 229, 0.3); }
+            50% { box-shadow: 0 0 30px rgba(79, 70, 229, 0.6); }
+        }
+        
+        @keyframes slide-up {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes bounce-in {
+            0% { transform: scale(0.3); opacity: 0; }
+            50% { transform: scale(1.05); }
+            70% { transform: scale(0.9); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes spin-slow {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Custom Classes */
+        .floating { animation: float 6s ease-in-out infinite; }
+        .pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .slide-up { animation: slide-up 0.6s ease-out; }
+        .bounce-in { animation: bounce-in 0.6s ease-out; }
+        .spin-slow { animation: spin-slow 2s linear infinite; }
+        
+        .glassmorphism {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+        
+        .search-button {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            transition: all 0.3s ease;
+        }
+        
+        .search-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.4);
+            background: linear-gradient(135deg, #5b52e8, #8b46f0);
+        }
+        
+        .audio-button {
+            background: linear-gradient(135deg, #10b981, #059669);
+            transition: all 0.3s ease;
+        }
+        
+        .audio-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.4);
+        }
+        
+        /* Enhanced Image Display */
+        .pose-image {
+            object-fit: contain !important;
+            object-position: center !important;
+            max-height: 100% !important;
+            max-width: 100% !important;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.05);
+        }
+        
+        .pose-image-container {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            border: 1px solid rgba(0, 0, 0, 0.1);
+        }
+        
+        .pose-image:hover {
+            transform: scale(1.02) !important;
+            transition: transform 0.3s ease !important;
+        }
+
+        .audio-button.playing {
+            background: linear-gradient(135deg, #dc2626, #b91c1c);
+        }
+
+        .audio-button.playing:hover {
+            box-shadow: 0 8px 20px rgba(220, 38, 38, 0.4);
+        }
+
+        .audio-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        /* Loading Animation */
+        .loading-spinner {
+            border: 3px solid #f3f4f6;
+            border-top: 3px solid #4f46e5;
             border-radius: 50%;
-            width: 30px;
-            height: 30px;
-            animation: spin 2s linear infinite;
-         }
-         @keyframes spin {
-            0% { transform: translate(-50%, -50%) rotate(0deg); }
-            100% { transform: translate(-50%, -50%) rotate(360deg); }
+            width: 40px;
+            height: 40px;
+            animation: spin-slow 1s linear infinite;
+        }
+        
+        .loading-dots::after {
+            content: '';
+            animation: loading-dots 1.5s infinite;
+        }
+        
+        @keyframes loading-dots {
+            0%, 20% { content: ''; }
+            40% { content: '.'; }
+            60% { content: '..'; }
+            80%, 100% { content: '...'; }
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            .mobile-padding { padding: 1rem; }
+            .mobile-text { font-size: 0.875rem; }
+            .mobile-button { padding: 0.75rem 1.5rem; }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border-radius: 4px;
         }
     </style>
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto p-4">
-        <h1 class="text-3xl font-bold mb-4 text-center">Yoga Pose Search</h1>
-        <form id="searchForm" class="mb-4">
-            <div class="mb-4">
-                <label for="prompt" class="block text-gray-700 text-sm font-bold mb-2">Enter your search prompt:</label>
-                <input type="text" id="prompt" name="prompt" class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline" placeholder="e.g., exercises for back pain">
-                <p id="promptError" class="text-red-500 text-xs italic hidden">Please enter a prompt.</p>
+<body class="min-h-screen gradient-bg">
+    <!-- Floating Background Elements -->
+    <div class="fixed inset-0 overflow-hidden pointer-events-none">
+        <div class="floating absolute top-20 left-10 w-20 h-20 bg-white bg-opacity-10 rounded-full blur-xl"></div>
+        <div class="floating absolute top-1/3 right-20 w-32 h-32 bg-purple-300 bg-opacity-20 rounded-full blur-2xl" style="animation-delay: -2s;"></div>
+        <div class="floating absolute bottom-20 left-1/3 w-24 h-24 bg-pink-300 bg-opacity-15 rounded-full blur-xl" style="animation-delay: -4s;"></div>
+    </div>
+
+    <div class="relative z-10 container mx-auto px-4 py-8 max-w-6xl">
+        <!-- Header -->
+        <header class="text-center mb-12 slide-up">
+            <div class="flex justify-center items-center mb-4">
+                <i class="fas fa-spa text-6xl text-white mr-4 floating"></i>
+                <h1 class="heading-font text-5xl md:text-6xl font-bold text-white">YogaFlow</h1>
             </div>
-            <div class="text-center">
-                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">Search</button>
+            <p class="text-xl md:text-2xl text-white text-opacity-90 mb-2">AI-Powered Yoga Pose Recommender</p>
+            <p class="text-lg text-white text-opacity-75">Find your perfect poses with personalized recommendations</p>
+        </header>
+
+        <!-- Search Section -->
+        <section class="mb-12 slide-up" style="animation-delay: 0.2s;">
+            <div class="max-w-2xl mx-auto">
+                <form id="searchForm" class="space-y-6">
+                    <div class="glassmorphism rounded-2xl p-6 md:p-8">
+                        <label for="prompt" class="block text-white text-lg font-semibold mb-4 flex items-center">
+                            <i class="fas fa-search mr-3"></i>
+                            What brings you to your mat today?
+                        </label>
+                        <div class="relative">
+                            <input 
+                                type="text" 
+                                id="prompt" 
+                                name="prompt" 
+                                class="w-full py-4 px-6 text-lg border-0 rounded-xl bg-white bg-opacity-90 text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-4 focus:ring-white focus:ring-opacity-50 transition-all duration-300" 
+                                placeholder="Try: 'back pain relief', 'morning energy', 'stress relief'..."
+                            >
+                            <div class="absolute right-4 top-1/2 transform -translate-y-1/2">
+                                <i class="fas fa-magic text-purple-500"></i>
+                            </div>
+                        </div>
+                        <p id="promptError" class="text-red-300 text-sm mt-2 hidden flex items-center">
+                            <i class="fas fa-exclamation-circle mr-2"></i>
+                            Please enter a search prompt.
+                        </p>
+                    </div>
+                    
+                    <div class="text-center">
+                        <button 
+                            type="submit" 
+                            id="searchButton"
+                            class="search-button text-white font-bold py-4 px-8 rounded-xl text-lg flex items-center justify-center mx-auto min-w-48 mobile-button pulse-glow"
+                        >
+                            <i class="fas fa-sparkles mr-3"></i>
+                            <span id="buttonText">Find My Poses</span>
+                        </button>
+                    </div>
+                </form>
             </div>
-        </form>
-         <div id="resultsContainer" class="mt-4 flex flex-wrap justify-center relative">
+        </section>
+
+        <!-- Quick Suggestions -->
+        <section class="mb-12 slide-up" style="animation-delay: 0.4s;">
+            <div class="max-w-4xl mx-auto">
+                <h3 class="text-white text-xl font-semibold mb-6 text-center">
+                    <i class="fas fa-lightbulb mr-2"></i>
+                    Popular Searches
+                </h3>
+                <div class="flex flex-wrap justify-center gap-3">
+                    <button class="suggestion-btn glassmorphism text-white px-4 py-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all duration-300 text-sm md:text-base" data-query="back pain relief">
+                        <i class="fas fa-heart mr-2"></i>Back Pain Relief
+                    </button>
+                    <button class="suggestion-btn glassmorphism text-white px-4 py-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all duration-300 text-sm md:text-base" data-query="beginner poses">
+                        <i class="fas fa-seedling mr-2"></i>Beginner Friendly
+                    </button>
+                    <button class="suggestion-btn glassmorphism text-white px-4 py-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all duration-300 text-sm md:text-base" data-query="stress relief">
+                        <i class="fas fa-leaf mr-2"></i>Stress Relief
+                    </button>
+                    <button class="suggestion-btn glassmorphism text-white px-4 py-2 rounded-full hover:bg-white hover:bg-opacity-20 transition-all duration-300 text-sm md:text-base" data-query="morning energy">
+                        <i class="fas fa-sun mr-2"></i>Morning Energy
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Loading State -->
+        <div id="loadingState" class="hidden text-center py-12">
+            <div class="glassmorphism rounded-2xl p-8 max-w-md mx-auto">
+                <div class="loading-spinner mx-auto mb-4"></div>
+                <h3 class="text-white text-xl font-semibold mb-2">Finding Perfect Poses</h3>
+                <p class="text-white text-opacity-75 loading-dots">Analyzing your needs</p>
+            </div>
+        </div>
+
+        <!-- Results Container -->
+        <div id="resultsContainer" class="grid gap-6 md:gap-8">
             <!-- Results will be displayed here -->
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="text-center py-12 slide-up">
+            <div class="glassmorphism rounded-2xl p-8 max-w-md mx-auto">
+                <i class="fas fa-search text-6xl text-white mb-4 floating"></i>
+                <h3 class="text-white text-xl font-semibold mb-2">Ready to Begin?</h3>
+                <p class="text-white text-opacity-75">Enter your wellness goal above to discover personalized yoga poses</p>
+            </div>
         </div>
     </div>
 
     <script>
+        // DOM Elements
         const searchForm = document.getElementById('searchForm');
         const promptInput = document.getElementById('prompt');
         const promptError = document.getElementById('promptError');
         const resultsContainer = document.getElementById('resultsContainer');
-        const body = document.body;
+        const loadingState = document.getElementById('loadingState');
+        const emptyState = document.getElementById('emptyState');
+        const searchButton = document.getElementById('searchButton');
+        const buttonText = document.getElementById('buttonText');
 
-        searchForm.addEventListener('submit', function(event) {
-            event.preventDefault();
-
-            const promptValue = promptInput.value.trim();
-            if (!promptValue) {
-              promptError.classList.remove("hidden");
-              return;
-            }
-             promptError.classList.add("hidden");
-
-
-            body.classList.add('loading'); // Add loading class
-             resultsContainer.innerHTML = ''; // Clear previous results and show loading indicator
-
-
-            fetch('/search', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ prompt: promptValue })
-            })
-            .then(response => response.json())
-            .then(data => {
-                body.classList.remove('loading'); // Remove loading class
-                if (data.error) {
-                    console.error("Error from API:", data.error);
-                    resultsContainer.innerHTML = `<p class="text-red-500">Error: ${data.error}</p>`;
-
-                } else if (data.results && data.results.length > 0) {
-                   displayResults(data.results)
-                } else {
-                    resultsContainer.innerHTML = `<p>No results found.</p>`;
-                }
-            })
-            .catch(error => {
-                body.classList.remove('loading'); // Remove loading class
-                console.error("Fetch error:", error);
-                resultsContainer.innerHTML = `<p class="text-red-500">An error occurred during the search.</p>`;
+        // Suggestion buttons
+        document.querySelectorAll('.suggestion-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const query = btn.getAttribute('data-query');
+                promptInput.value = query;
+                performSearch(query);
             });
         });
 
+        // Form submission
+        searchForm.addEventListener('submit', function(event) {
+            event.preventDefault();
+            const promptValue = promptInput.value.trim();
+            
+            if (!promptValue) {
+                promptError.classList.remove("hidden");
+                promptInput.classList.add('ring-red-300');
+                return;
+            }
+            
+            promptError.classList.add("hidden");
+            promptInput.classList.remove('ring-red-300');
+            performSearch(promptValue);
+        });
+
+        // Search function
+        function performSearch(query) {
+            // Show loading state
+            emptyState.classList.add('hidden');
+            resultsContainer.innerHTML = '';
+            loadingState.classList.remove('hidden');
+            
+            // Update button state
+            searchButton.classList.add('opacity-75', 'cursor-wait');
+            buttonText.innerHTML = '<i class="fas fa-spinner fa-spin mr-3"></i>Searching...';
+
+            fetch('/search', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: query })
+            })
+            .then(response => response.json())
+            .then(data => {
+                loadingState.classList.add('hidden');
+                resetSearchButton();
+                
+                if (data.error) {
+                    showError(data.error);
+                } else if (data.results && data.results.length > 0) {
+                    displayResults(data.results);
+                } else {
+                    showNoResults();
+                }
+            })
+            .catch(error => {
+                loadingState.classList.add('hidden');
+                resetSearchButton();
+                showError('An error occurred during the search. Please try again.');
+                console.error("Fetch error:", error);
+            });
+        }
+
+        function resetSearchButton() {
+            searchButton.classList.remove('opacity-75', 'cursor-wait');
+            buttonText.innerHTML = '<i class="fas fa-sparkles mr-3"></i>Find My Poses';
+        }
+
         function displayResults(results) {
-            resultsContainer.innerHTML = ''; // Clear previous results
-             results.forEach(result => {
+            resultsContainer.className = 'grid gap-6 md:gap-8 lg:grid-cols-2 xl:grid-cols-3';
+            resultsContainer.innerHTML = '';
+            
+            results.forEach((result, index) => {
                 const card = document.createElement('div');
-                card.className = 'max-w-sm rounded overflow-hidden shadow-lg m-2 bg-white';
-                const imageUrl = result.metadata.metadata.photo_url; 
-                 card.innerHTML = `
-                    <div class="px-6 py-4">
-                     ${imageUrl ? `<img class="w-full h-full object-cover mb-4" src="${imageUrl}" alt="${result.metadata.name || 'Yoga Pose'}" />` : ''}
-                        <div class="font-bold text-xl mb-2">${result.metadata.metadata.name || 'N/A'}</div>
-                        <p class="text-gray-700 text-base">
-                            ${result.metadata.metadata.description || 'N/A'}
-                        </p>
-                         <div class="mt-2">
-                             <span class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">Expertise: ${result.metadata.metadata.expertise_level || 'N/A'}</span>
-                             ${result.metadata.metadata.pose_type ? result.metadata.metadata.pose_type.map(type => `<span class="inline-block bg-gray-200 rounded-full px-3 py-1 text-sm font-semibold text-gray-700 mr-2 mb-2">${type}</span>`).join('') : '<span>N/A</span>'}
-                         </div>
-                         <button class="mt-4 bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline" onclick="generateAndPlayAudio('${encodeURIComponent(result.metadata.metadata.description)}')">Play Audio</button>
+                card.className = 'bounce-in card-hover';
+                card.style.animationDelay = `${index * 0.1}s`;
+                
+                const imageUrl = result.metadata.metadata.photo_url;
+                const description = result.metadata.metadata.description || 'A beautiful yoga pose for wellness and mindfulness.';
+                const poseName = result.metadata.metadata.name || 'Yoga Pose';
+                
+                card.innerHTML = `
+                    <div class="bg-white rounded-2xl shadow-xl overflow-hidden h-full">
+                        ${imageUrl ? `
+                            <div class="relative h-64 md:h-72 pose-image-container overflow-hidden rounded-t-2xl">
+                                <img class="pose-image w-full h-full transition-transform duration-300" 
+                                     src="${imageUrl}" 
+                                     alt="${poseName}" 
+                                     loading="lazy"
+                                     onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                                <div class="absolute inset-0 bg-gradient-to-br from-blue-50 to-purple-50 items-center justify-center hidden">
+                                    <i class="fas fa-spa text-4xl text-gray-400"></i>
+                                    <p class="text-gray-500 mt-2 text-sm">Image not available</p>
+                                </div>
+                                <div class="absolute top-4 right-4 bg-white bg-opacity-95 px-3 py-1 rounded-full text-sm font-semibold text-gray-700 shadow-lg backdrop-blur-sm">
+                                    ${result.metadata.metadata.expertise_level || 'All Levels'}
+                                </div>
+                            </div>
+                        ` : `
+                            <div class="h-64 md:h-72 gradient-bg flex items-center justify-center rounded-t-2xl">
+                                <div class="text-center">
+                                    <i class="fas fa-spa text-6xl text-white mb-3"></i>
+                                    <p class="text-white text-opacity-80 text-sm">Yoga Pose</p>
+                                </div>
+                            </div>
+                        `}
+                        
+                        <div class="p-6">
+                            <h3 class="heading-font text-xl md:text-2xl font-bold text-gray-800 mb-3">
+                                ${poseName}
+                            </h3>
+                            
+                            <p class="text-gray-600 mb-4 leading-relaxed mobile-text">
+                                ${description.length > 120 ? description.substring(0, 120) + '...' : description}
+                            </p>
+                            
+                            <div class="flex flex-wrap gap-2 mb-4">
+                                ${result.metadata.metadata.pose_type ? 
+                                    result.metadata.metadata.pose_type.map(type => 
+                                        `<span class="bg-gradient-to-r from-purple-100 to-pink-100 text-purple-800 px-3 py-1 rounded-full text-xs font-medium">${type}</span>`
+                                    ).join('') : 
+                                    '<span class="bg-gray-100 text-gray-600 px-3 py-1 rounded-full text-xs">General</span>'
+                                }
+                            </div>
+                            
+                            <button 
+                                class="audio-button w-full text-white font-semibold py-3 px-4 rounded-xl flex items-center justify-center space-x-2"
+                                data-description="${description.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                                data-pose-name="${poseName.replace(/"/g, '&quot;').replace(/'/g, '&#39;')}"
+                            >
+                                <i class="fas fa-play"></i>
+                                <span>Listen to Guide</span>
+                            </button>
+                        </div>
                     </div>
                 `;
+                
+                // Add event listener to the audio button
+                const audioButton = card.querySelector('.audio-button');
+                audioButton.addEventListener('click', function() {
+                    generateAndPlayAudio(description, poseName);
+                });
+                
                 resultsContainer.appendChild(card);
             });
         }
 
-        async function generateAndPlayAudio(description) {
+        function showError(message) {
+            resultsContainer.className = 'text-center py-12';
+            resultsContainer.innerHTML = `
+                <div class="glassmorphism rounded-2xl p-8 max-w-md mx-auto">
+                    <i class="fas fa-exclamation-triangle text-6xl text-red-300 mb-4"></i>
+                    <h3 class="text-white text-xl font-semibold mb-2">Oops!</h3>
+                    <p class="text-white text-opacity-75">${message}</p>
+                </div>
+            `;
+        }
+
+        function showNoResults() {
+            resultsContainer.className = 'text-center py-12';
+            resultsContainer.innerHTML = `
+                <div class="glassmorphism rounded-2xl p-8 max-w-md mx-auto">
+                    <i class="fas fa-search text-6xl text-white mb-4 floating"></i>
+                    <h3 class="text-white text-xl font-semibold mb-2">No poses found</h3>
+                    <p class="text-white text-opacity-75">Try a different search term or browse our suggestions above</p>
+                </div>
+            `;
+        }
+
+        // Audio function
+        // Global audio management
+        let currentAudio = null;
+        let currentAudioButton = null;
+
+        async function generateAndPlayAudio(description, poseName) {
+            const button = event.target.closest('button');
+            const originalContent = button.innerHTML;
+            
+            // If this button is currently playing, stop the audio
+            if (currentAudio && currentAudioButton === button && !currentAudio.paused) {
+                stopCurrentAudio();
+                return;
+            }
+            
+            // Stop any currently playing audio
+            if (currentAudio && !currentAudio.paused) {
+                stopCurrentAudio();
+            }
+            
             try {
+                button.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Loading...';
+                button.disabled = true;
+                
+                console.log(`[${poseName || 'Unknown'}] Requesting audio generation...`);
+                console.log(`[${poseName || 'Unknown'}] Description length:`, description.length);
+                
                 const response = await fetch('/generate_audio', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ description })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ description: description })
                 });
 
+                console.log(`[${poseName || 'Unknown'}] Audio response status:`, response.status);
+                
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                    const errorText = await response.text();
+                    throw new Error(`HTTP ${response.status}: ${errorText}`);
                 }
 
                 const audioBlob = await response.blob();
+                console.log(`[${poseName || 'Unknown'}] Audio blob size:`, audioBlob.size);
+                
+                if (audioBlob.size === 0) {
+                    throw new Error('Received empty audio file');
+                }
+                
                 const audioUrl = URL.createObjectURL(audioBlob);
                 const audio = new Audio(audioUrl);
-                audio.play();
+                
+                // Set this as the current audio
+                currentAudio = audio;
+                currentAudioButton = button;
+                
+                // Add audio event listeners for better debugging
+                audio.addEventListener('loadstart', () => console.log(`[${poseName || 'Unknown'}] Audio loading started`));
+                audio.addEventListener('canplay', () => console.log(`[${poseName || 'Unknown'}] Audio can start playing`));
+                audio.addEventListener('error', (e) => console.error(`[${poseName || 'Unknown'}] Audio playback error:`, e));
+                
+                // Try to play audio
+                try {
+                    await audio.play();
+                    console.log(`[${poseName || 'Unknown'}] Audio playback started successfully`);
+                    
+                    // Update button to show stop functionality
+                    button.innerHTML = '<i class="fas fa-stop mr-2"></i><span>Stop Audio</span>';
+                    button.classList.add('playing');
+                    button.disabled = false; // Enable so user can click to stop
+                    
+                    audio.addEventListener('ended', () => {
+                        console.log(`[${poseName || 'Unknown'}] Audio playback ended`);
+                        resetAudioButton(button, originalContent);
+                        URL.revokeObjectURL(audioUrl); // Clean up
+                    });
+                    
+                } catch (playError) {
+                    console.error(`[${poseName || 'Unknown'}] Audio play error:`, playError);
+                    currentAudio = null;
+                    currentAudioButton = null;
+                    
+                    // Fallback: try to download the audio file
+                    const link = document.createElement('a');
+                    link.href = audioUrl;
+                    link.download = `yoga_pose_${poseName || 'audio'}.wav`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    
+                    button.innerHTML = '<i class="fas fa-download mr-2"></i>Downloaded';
+                    setTimeout(() => {
+                        resetAudioButton(button, originalContent);
+                    }, 2000);
+                }
+                
             } catch (error) {
-                console.error('Error generating or playing audio:', error);
-                alert('Error generating audio. Please try again later.');
+                console.error(`[${poseName || 'Unknown'}] Error generating or playing audio:`, error);
+                button.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Error';
+                
+                // Show detailed error for this specific pose
+                const errorMsg = `Audio Error for "${poseName}": ${error.message}`;
+                console.error(errorMsg);
+                alert(errorMsg);
+                
+                setTimeout(() => {
+                    resetAudioButton(button, originalContent);
+                }, 3000);
             }
         }
+
+        function stopCurrentAudio() {
+            if (currentAudio && !currentAudio.paused) {
+                currentAudio.pause();
+                currentAudio.currentTime = 0;
+                console.log('Audio stopped by user');
+            }
+            
+            if (currentAudioButton) {
+                resetAudioButton(currentAudioButton);
+            }
+        }
+
+        function resetAudioButton(button, originalContent = null) {
+            if (!originalContent) {
+                originalContent = '<i class="fas fa-play"></i><span>Listen to Guide</span>';
+            }
+            button.innerHTML = originalContent;
+            button.classList.remove('playing');
+            button.disabled = false;
+            
+            // Clear current audio references if this button was the active one
+            if (currentAudioButton === button) {
+                currentAudio = null;
+                currentAudioButton = null;
+            }
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && e.ctrlKey) {
+                const promptValue = promptInput.value.trim();
+                if (promptValue) performSearch(promptValue);
+            } else if (e.key === 'Escape') {
+                // Stop audio on Escape key
+                if (currentAudio && !currentAudio.paused) {
+                    stopCurrentAudio();
+                }
+            }
+        });
+
+        // Auto-focus search input on load
+        window.addEventListener('load', () => {
+            promptInput.focus();
+        });
     </script>
 </body>
 </html>

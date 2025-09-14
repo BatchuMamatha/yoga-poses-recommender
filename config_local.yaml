@@ -1,9 +1,15 @@
-project_id: your-project-id
+# Local development configuration
+project_id: local-development
 location: us-central1
 gemini_model_name: gemini-1.5-flash-002
 embedding_model_name: text-embedding-004
 image_generation_model_name: imagen-3.0-fast-generate-002
-database: (default)
+database: local
 collection: poses
 test_collection: test-poses
 top_k: "3"
+port: 8081
+local_mode: true
+
+# Add your API key here:
+gemini_api_key: "AIzaSyC0JpVze60XWsIYmnMZ1gdP4oZHFzeON7g"

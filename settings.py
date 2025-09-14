@@ -1,7 +1,12 @@
+import os
 from pydantic_settings import BaseSettings, SettingsConfigDict, YamlConfigSettingsSource, PydanticBaseSettingsSource
 from typing import Type, Tuple
 
 class Settings(BaseSettings):
+    # API Keys for local development
+    gemini_api_key: str = "AIzaSyC0JpVze60XWsIYmnMZ1gdP4oZHFzeON7g"  # Your Gemini API key
+    
+    # Google Cloud settings (can be dummy values for local development)
     project_id: str
     location: str
     gemini_model_name: str
@@ -12,9 +17,12 @@ class Settings(BaseSettings):
     test_collection: str
     top_k: int
     port: int = 8080
+    
+    # Local development mode
+    local_mode: bool = True
 
     model_config = SettingsConfigDict(
-        yaml_file="config.yaml", yaml_file_encoding="utf-8"
+        yaml_file="config_local.yaml", yaml_file_encoding="utf-8"
     )
 
     @classmethod
