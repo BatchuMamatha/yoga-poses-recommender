@@ -2,6 +2,17 @@
 
 An intelligent, local Flask web application that provides personalized yoga pose recommendations with AI-powered descriptions and text-to-speech guidance.
 
+## 📱 Application Screenshots
+
+### 🏠 Main Interface
+![Main Application Interface](output/1.png)
+
+### 🔍 Search Results
+![Search Results with Pose Recommendations](output/2.png)
+
+### 🎵 Audio Features & Enhanced UI
+![Audio Controls and Enhanced Visual Experience](output/3.png)
+
 ## ✨ Features
 
 ### 🎯 **Smart Pose Search**
